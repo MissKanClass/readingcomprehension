@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中文篇章語文闖關遊戲 | LAN3008</title>
+<style>
+  :root {
+    --primary: #2C3E50;
+    --accent: #E74C3C;
+    --gold: #F39C12;
+    --green: #27AE60;
+    --blue: #2980B9;
+    --purple: #8E44AD;
+    --light: #ECF0F1;
+    --white: #FFFFFF;
+    --shadow: 0 4px 20px rgba(0,0,0,0.15);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #333;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== HOME SCREEN ===== */
+  #home-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .home-container {
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 680px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .game-logo {
+    font-size: 64px;
+    margin-bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .game-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--primary);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .game-subtitle {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 32px;
+  }
+
+  .sections-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .section-card {
+    background: linear-gradient(135deg, var(--card-color) 0%, color-mix(in srgb, var(--card-color) 70%, black) 100%);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 3px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .section-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    border-color: rgba(255,255,255,0.4);
+  }
+
+  .section-card.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(243,156,18,0.3);
+  }
+
+  .section-card .card-icon { font-size: 28px; margin-bottom: 6px; }
+  .section-card .card-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .section-card .card-count { font-size: 11px; opacity: 0.85; margin-top: 4px; }
+
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #ddd;
+    border-radius: var(--radius);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .mode-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .mode-btn.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(41,128,185,0.35);
+  }
+
+  .mode-btn .mode-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+  .timer-settings {
+    background: #f8f9fa;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  .timer-settings.show { display: block; }
+  .timer-settings label { font-size: 14px; color: #555; font-weight: 600; }
+  .timer-settings select {
+    margin-left: 10px;
+    padding: 6px 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 3px;
+    transition: all 0.25s;
+    box-shadow: 0 6px 20px rgba(231,76,60,0.4);
+  }
+
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(231,76,60,0.5);
+  }
+
+  .start-btn:active { transform: translateY(0); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen { background: transparent; }
+
+  .game-header {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .back-btn {
+    background: none;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .section-badge {
+    background: var(--section-color, var(--blue));
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .progress-area {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+
+  .progress-bar-wrap {
+    background: #eee;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--section-color, var(--blue)), color-mix(in srgb, var(--section-color, var(--blue)) 60%, white));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .score-display {
+    text-align: center;
+    min-width: 60px;
+  }
+
+  .score-num {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-label { font-size: 10px; color: #999; }
+
+  .timer-display {
+    text-align: center;
+    min-width: 70px;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    padding: 6px 10px;
+  }
+
+  .timer-num {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-num.warning { color: #FF6B6B; animation: pulse 0.5s ease-in-out infinite; }
+  .timer-label { font-size: 10px; opacity: 0.8; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .game-content {
+    flex: 1;
+    padding: 20px;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.97);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .question-num {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .question-text {
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 28px;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 2px solid #e8e8e8;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    position: relative;
+  }
+
+  .option-item:hover:not(.disabled) {
+    border-color: var(--section-color, var(--blue));
+    background: color-mix(in srgb, var(--section-color, var(--blue)) 8%, white);
+    transform: translateX(4px);
+  }
+
+  .option-item.selected {
+    border-color: var(--section-color, var(--blue));
+    background: color-mix(in srgb, var(--section-color, var(--blue)) 12%, white);
+  }
+
+  .option-item.correct {
+    border-color: var(--green);
+    background: rgba(39,174,96,0.1);
+  }
+
+  .option-item.wrong {
+    border-color: var(--accent);
+    background: rgba(231,76,60,0.1);
+  }
+
+  .option-item.disabled { cursor: default; }
+
+  .option-label {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: #666;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .option-item.selected .option-label {
+    background: var(--section-color, var(--blue));
+    color: white;
+  }
+
+  .option-item.correct .option-label { background: var(--green); color: white; }
+  .option-item.wrong .option-label { background: var(--accent); color: white; }
+
+  .option-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #444;
+    flex: 1;
+    padding-top: 4px;
+  }
+
+  .option-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    padding-top: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .option-item.correct .option-icon,
+  .option-item.wrong .option-icon { opacity: 1; }
+
+  /* Dropdown select style */
+  .select-wrapper {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .answer-select {
+    width: 100%;
+    padding: 16px 48px 16px 18px;
+    border: 2px solid #e8e8e8;
+    border-radius: var(--radius);
+    font-size: 15px;
+    color: #444;
+    background: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .answer-select:focus {
+    outline: none;
+    border-color: var(--section-color, var(--blue));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--section-color, var(--blue)) 20%, transparent);
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #999;
+    font-size: 18px;
+  }
+
+  .confirm-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--section-color, var(--blue)), color-mix(in srgb, var(--section-color, var(--blue)) 70%, black));
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  .confirm-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  }
+
+  .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .feedback-box {
+    margin-top: 20px;
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(39,174,96,0.12); border: 2px solid var(--green); }
+  .feedback-box.wrong-fb { background: rgba(231,76,60,0.1); border: 2px solid var(--accent); }
+
+  .feedback-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .feedback-box.correct-fb .feedback-title { color: var(--green); }
+  .feedback-box.wrong-fb .feedback-title { color: var(--accent); }
+
+  .feedback-text { font-size: 14px; line-height: 1.7; color: #555; }
+
+  .next-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 2px;
+    margin-top: 16px;
+    transition: all 0.2s;
+    display: none;
+  }
+
+  .next-btn.show { display: block; }
+  .next-btn:hover { background: #34495e; transform: translateY(-1px); }
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .result-container {
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .result-emoji {
+    font-size: 72px;
+    margin-bottom: 16px;
+    animation: bounce 0.6s ease;
+  }
+
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .result-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .result-section-name {
+    font-size: 15px;
+    color: #888;
+    margin-bottom: 28px;
+  }
+
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: conic-gradient(var(--section-color, var(--blue)) var(--pct), #eee var(--pct));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    position: relative;
+  }
+
+  .score-circle-inner {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-big { font-size: 32px; font-weight: 900; color: var(--primary); }
+  .score-total { font-size: 14px; color: #999; }
+
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .stat-num { font-size: 24px; font-weight: 900; }
+  .stat-label { font-size: 12px; color: #999; margin-top: 2px; }
+  .stat-box.correct .stat-num { color: var(--green); }
+  .stat-box.wrong .stat-num { color: var(--accent); }
+  .stat-box.time .stat-num { color: var(--blue); }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+  }
+
+  .result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .action-btn {
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover { transform: translateY(-2px); }
+
+  .btn-retry {
+    background: linear-gradient(135deg, var(--section-color, var(--blue)), color-mix(in srgb, var(--section-color, var(--blue)) 70%, black));
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  .btn-home {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-share {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+  }
+
+  .btn-copy-link {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+  }
+
+  .share-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+
+  .share-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== SECTION SELECT SCREEN ===== */
+  #section-select-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .section-select-container {
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 680px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .section-select-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .section-select-subtitle {
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .section-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border: 2px solid #eee;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+  }
+
+  .section-item:hover {
+    border-color: var(--item-color);
+    background: color-mix(in srgb, var(--item-color) 6%, white);
+    transform: translateX(4px);
+  }
+
+  .section-item-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--item-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .section-item-info { flex: 1; }
+  .section-item-title { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .section-item-desc { font-size: 12px; color: #888; margin-top: 3px; }
+  .section-item-count {
+    font-size: 13px;
+    color: white;
+    background: var(--item-color);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .home-container, .result-container, .section-select-container { padding: 28px 20px; }
+    .sections-grid { grid-template-columns: 1fr; }
+    .game-title { font-size: 22px; }
+    .question-text { font-size: 15px; }
+    .option-text { font-size: 14px; }
+    .stats-row { flex-direction: column; }
+    .mode-selector { flex-direction: column; }
+    .game-header { flex-wrap: wrap; gap: 10px; }
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div id="home-screen" class="screen active">
+  <div class="home-container">
+    <div class="game-logo">📚</div>
+    <h1 class="game-title">中文篇章語文闖關</h1>
+    <p class="game-subtitle">LAN3008 · 課次十至十一 · 互動練習</p>
+
+    <div class="sections-grid" id="sections-grid"></div>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" id="mode-practice" onclick="setMode('practice')">
+        <span class="mode-icon">📖</span>
+        練習模式
+      </button>
+      <button class="mode-btn" id="mode-timed" onclick="setMode('timed')">
+        <span class="mode-icon">⏱️</span>
+        計時闖關
+      </button>
+    </div>
+
+    <div class="timer-settings" id="timer-settings">
+      <label>
+        每題限時：
+        <select id="time-per-question">
+          <option value="15">15 秒</option>
+          <option value="20" selected>20 秒</option>
+          <option value="30">30 秒</option>
+          <option value="45">45 秒</option>
+          <option value="60">60 秒</option>
+        </select>
+      </label>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">開始闖關 🚀</button>
+  </div>
+</div>
+
+<!-- SECTION SELECT SCREEN -->
+<div id="section-select-screen" class="screen">
+  <div class="section-select-container">
+    <h2 class="section-select-title">選擇關卡</h2>
+    <p class="section-select-subtitle">選擇你想練習的知識點</p>
+    <div class="section-list" id="section-list"></div>
+    <button class="action-btn btn-home" style="width:100%;" onclick="showHome()">← 返回主頁</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="confirmBack()">← 退出</button>
+    <span class="section-badge" id="header-section-badge">第一關</span>
+    <div class="progress-area">
+      <div class="progress-text" id="progress-text">第 1 題，共 8 題</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="score-display">
+      <div class="score-num" id="score-display">0</div>
+      <div class="score-label">分數</div>
+    </div>
+    <div class="timer-display" id="timer-display" style="display:none">
+      <div class="timer-num" id="timer-num">20</div>
+      <div class="timer-label">秒</div>
+    </div>
+  </div>
+
+  <div class="game-content">
+    <div class="question-card" id="question-card">
+      <div class="question-num" id="question-num">第 1 題</div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options-list" id="options-list"></div>
+      <button class="confirm-btn" id="confirm-btn" onclick="confirmAnswer()" disabled>確認答案</button>
+      <div class="feedback-box" id="feedback-box">
+        <div class="feedback-title" id="feedback-title"></div>
+        <div class="feedback-text" id="feedback-text"></div>
+      </div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen">
+  <div class="result-container">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <h2 class="result-title" id="result-title">闖關完成！</h2>
+    <p class="result-section-name" id="result-section-name"></p>
+
+    <div class="score-circle" id="score-circle">
+      <div class="score-circle-inner">
+        <div class="score-big" id="result-score-big">0</div>
+        <div class="score-total" id="result-score-total">/ 0 分</div>
+      </div>
+    </div>
+
+    <div class="grade-badge" id="grade-badge">優秀</div>
+
+    <div class="stats-row">
+      <div class="stat-box correct">
+        <div class="stat-num" id="stat-correct">0</div>
+        <div class="stat-label">答對題數</div>
+      </div>
+      <div class="stat-box wrong">
+        <div class="stat-num" id="stat-wrong">0</div>
+        <div class="stat-label">答錯題數</div>
+      </div>
+      <div class="stat-box time">
+        <div class="stat-num" id="stat-time">--</div>
+        <div class="stat-label">用時（秒）</div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="action-btn btn-retry" id="btn-retry" onclick="retrySection()">重新挑戰本關 🔄</button>
+      <button class="action-btn btn-copy-link" onclick="copyGameLink()">📋 複製遊戲連結分享</button>
+      <button class="action-btn btn-home" onclick="showHome()">🏠 返回主頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Toast -->
+<div class="share-toast" id="share-toast">✅ 連結已複製到剪貼板！</div>
+
+<script>
+// ===== GAME DATA =====
+const GAME_DATA = {
+  sections: [
+    {
+      id: "section1",
+      title: "第一關：重整信息",
+      icon: "🔄",
+      color: "#4A90D9",
+      description: "考核你能否按邏輯順序重整篇章內容，抽取關鍵信息。",
+      questions: [
+        {
+          id: "q1_1",
+          question: "《工作安全手冊》的內容大綱，以下哪個排列次序最符合邏輯？",
+          options: [
+            "工業意外的預防方法 → 工業意外的成因 → 工業意外的統計數據",
+            "工業意外的統計數據 → 工業意外的成因 → 工業意外的預防方法",
+            "工業意外的成因 → 工業意外的統計數據 → 工業意外的預防方法",
+            "工業意外的統計數據 → 工業意外的預防方法 → 工業意外的成因"
+          ],
+          answer: 1,
+          explanation: "正確次序是：先呈現統計數據（問題的規模），再分析成因（問題的根源），最後提出預防方法（解決方案），符合「問題→分析→解決」的邏輯結構。"
+        },
+        {
+          id: "q1_2",
+          question: "以下哪段文字最能說明「篇章結構」的定義？",
+          options: [
+            "篇章結構是指文章的字數和段落數目。",
+            "篇章結構是作者對材料的組織和安排，是作者思路的反映，能揭示各段、各句群之間的關係。",
+            "篇章結構是指文章使用的修辭手法和語言風格。",
+            "篇章結構是指文章的開頭、中間和結尾三個部分。"
+          ],
+          answer: 1,
+          explanation: "篇章結構是作者對材料的組織和安排，是作者思路的反映。把握篇章結構，就能揭示各段、各句群之間的關係，了解作者的寫作意圖。"
+        },
+        {
+          id: "q1_3",
+          question: "以下哪段文字因為句子在意義上不關聯而無法形成篇章？",
+          options: [
+            "瑞士有不少吸引人的地方，例如優美的風景及充滿地方色彩的節日活動。瑞士地域雖小，但公共交通卻十分發達。",
+            "小明住在將軍澳。港鐵觀塘綫新加了何文田站。今天的天氣很好。機電工程署印製了大量雙語小冊子。沙田IVE的地址是新界沙田源禾路21號。",
+            "全球新能源汽車銷量持續增長，市場佔比穩步提升。中國在這一領域的領先地位尤為顯著。",
+            "牙齒是守住人體健康的第一道關卡，保護牙齒健康至關重要。牙齒為何會生病？"
+          ],
+          answer: 1,
+          explanation: "第二選項中的句子各自獨立，毫無邏輯關聯，沒有表達明確的主題，所以無法形成篇章或段落。"
+        },
+        {
+          id: "q1_4",
+          question: "關於瑞士的三段文字，正確的邏輯排列次序是哪一個？（甲：瑞士的吸引力和交通；乙：瑞士的其他特色；丙：瑞士的地理位置和總結）",
+          options: [
+            "甲 → 乙 → 丙",
+            "乙 → 甲 → 丙",
+            "丙 → 甲 → 乙",
+            "甲 → 丙 → 乙"
+          ],
+          answer: 2,
+          explanation: "正確次序是丙→甲→乙。丙先介紹瑞士的地理位置（總括），甲介紹主要吸引力（風景和交通），乙介紹其他特色（音樂節、購物、美食等），符合「總→分」的邏輯。"
+        },
+        {
+          id: "q1_5",
+          question: "根據新能源汽車的篇章，支撐新能源運輸發展的兩個關鍵項目是什麼？",
+          options: [
+            "政府政策和國際合作",
+            "基礎設施和技術創新",
+            "市場需求和消費者意識",
+            "環保法規和碳排放標準"
+          ],
+          answer: 1,
+          explanation: "文章明確指出「完善的基礎設施是新能源運輸發展的關鍵支撐」，以及「技術創新推動新能源運輸突破應用場景限制」，因此兩個關鍵項目是基礎設施和技術創新。"
+        },
+        {
+          id: "q1_6",
+          question: "根據新能源汽車篇章，在鐵路領域，新能源技術的應用是什麼？",
+          options: [
+            "電動列車逐步取代傳統蒸汽機車",
+            "太陽能列車在沙漠地區試運行",
+            "氫動力列車逐步取代傳統柴油機車",
+            "混合動力列車在城市間普及"
+          ],
+          answer: 2,
+          explanation: "文章明確指出「在鐵路領域，氫動力列車逐步取代傳統柴油機車，降低燃油消耗與碳排放」。"
+        },
+        {
+          id: "q1_7",
+          question: "根據新能源汽車篇章，新能源運輸目前面臨的挑戰不包括哪一項？",
+          options: [
+            "部分地區補能設施分佈不均",
+            "電池原材料供應及清潔能源儲運成本較高",
+            "全球新能源轉型進度不一",
+            "新能源汽車的外觀設計不夠美觀"
+          ],
+          answer: 3,
+          explanation: "文章提到的挑戰包括：補能設施分佈不均、電池原材料供應及清潔能源儲運成本問題、全球新能源轉型進度不一。外觀設計問題並未在文中提及。"
+        },
+        {
+          id: "q1_8",
+          question: "重整信息時，最重要的原則是什麼？",
+          options: [
+            "按照文章原有的段落順序排列",
+            "按照字數多少排列",
+            "釐清篇章的內容關係，按邏輯順序重整",
+            "按照作者的個人喜好排列"
+          ],
+          answer: 2,
+          explanation: "重整信息的核心是「釐清篇章的內容關係」，根據事物發展的邏輯（如問題→分析→解決，或時間順序等）來重新排列，而非依賴原有順序或字數。"
+        }
+      ]
+    },
+    {
+      id: "section2",
+      title: "第二關：標示語的作用",
+      icon: "🏷️",
+      color: "#E8A838",
+      description: "考核你能否識別標示語並分析其在篇章中的作用。",
+      questions: [
+        {
+          id: "q2_1",
+          question: "「標示語」在文章中的主要功能是什麼？",
+          options: [
+            "提供文章的實質信息和具體內容",
+            "強調文章的組織結構，使文章的綱領結構清楚顯示出來",
+            "增加文章的文學色彩和修辭效果",
+            "連接段落之間的情感轉折"
+          ],
+          answer: 1,
+          explanation: "標示語用以強調文章的組織結構。它不能提供實質的信息，但能使文章的綱領結構清楚顯示出來，起到提示作用，使讀者易於掌握文章的內容結構。"
+        },
+        {
+          id: "q2_2",
+          question: "「工序包括：第一，鋪設信號線……第二，擺放混凝土墓座……第三，安裝設備杆……第四，接駁新系統及測試」，標示語「第一、第二、第三、第四」的作用是什麼？",
+          options: [
+            "揭示寫作目的或主旨",
+            "歸納總結全文要點",
+            "展示文章的內容結構和層次",
+            "引出反面論據加以反駁"
+          ],
+          answer: 2,
+          explanation: "「第一、第二、第三、第四」這類標示語的作用是展示文章的內容結構和層次，清楚地列出各個工序的先後順序。"
+        },
+        {
+          id: "q2_3",
+          question: "「本文旨在探討辦公室常見的職業安全問題及其預防措施，以協助僱主及僱員避免辦公室意外的發生」，「本文旨在」這個標示語的作用是什麼？",
+          options: [
+            "展示文章的內容結構和層次",
+            "揭示寫作目的或主旨",
+            "歸納總結全文要點",
+            "引出具體例子加以說明"
+          ],
+          answer: 1,
+          explanation: "「本文旨在……」這類標示語的作用是揭示寫作目的或主旨，讓讀者在閱讀之初便了解文章的寫作目的。"
+        },
+        {
+          id: "q2_4",
+          question: "「總括而言，現今這種不盡不實、誤導消費者的推銷手法屢見不鮮，消費者務必加倍小心！」，「總括而言」這個標示語的作用是什麼？",
+          options: [
+            "展示文章的內容結構和層次",
+            "揭示寫作目的或主旨",
+            "歸納總結",
+            "引出反面例子加以對比"
+          ],
+          answer: 2,
+          explanation: "「總括而言」這類標示語的作用是歸納總結，對前文所述的內容作出概括性的結論。"
+        },
+        {
+          id: "q2_5",
+          question: "以下哪個詞語不屬於「展示文章內容結構和層次」的標示語？",
+          options: [
+            "首先、其次",
+            "第一個階段是",
+            "總而言之",
+            "最初、其後"
+          ],
+          answer: 2,
+          explanation: "「總而言之」是歸納總結類的標示語，而非展示文章內容結構和層次的標示語。展示結構層次的標示語包括：首先、其次；第一個階段是；最初、其後等。"
+        },
+        {
+          id: "q2_6",
+          question: "以下哪個標示語最適合用於「歸納總結」的作用？",
+          options: [
+            "第一、第二、第三",
+            "本文的主題是",
+            "由此可見",
+            "首先"
+          ],
+          answer: 2,
+          explanation: "「由此可見」是歸納總結類的標示語，用於對前文的論述作出總結性的結論。其他選項分別屬於展示結構層次（第一、第二、第三；首先）和揭示主旨（本文的主題是）的標示語。"
+        },
+        {
+          id: "q2_7",
+          question: "標示語與文章實質內容的關係，以下哪個說法最準確？",
+          options: [
+            "標示語能提供豐富的實質信息，是文章的核心內容",
+            "標示語不能提供實質信息，但能使文章的綱領結構清楚顯示",
+            "標示語既能提供實質信息，又能展示文章結構",
+            "標示語只用於文章開頭，不出現在文章中間或結尾"
+          ],
+          answer: 1,
+          explanation: "標示語不能提供實質的信息，但能使文章的綱領結構清楚顯示出來。閱讀時，標示語能起到提示作用，使讀者易於掌握文章的內容結構。"
+        }
+      ]
+    },
+    {
+      id: "section3",
+      title: "第三關：句群的概念",
+      icon: "📝",
+      color: "#5BAD72",
+      description: "考核你對句群定義、特點及其與段落關係的理解。",
+      questions: [
+        {
+          id: "q3_1",
+          question: "以下哪個說法最準確地描述「句群」的定義？",
+          options: [
+            "句群是由單個長句組成的語言單位",
+            "句群是由最少兩個句子組成，只有一個中心意思，句子之間存在邏輯聯繫",
+            "句群等同於文章的一個自然段",
+            "句群是文章中所有句子的總稱"
+          ],
+          answer: 1,
+          explanation: "句群又叫句組、語段，是由最少兩個句子組成，句子可以是單句或複句。一個句群，只有一個「中心意思」。句群中的句子存在著邏輯上的聯繫，它們前後銜接連貫。"
+        },
+        {
+          id: "q3_2",
+          question: "句群與段落的主要區別是什麼？",
+          options: [
+            "句群比段落包含更多的句子",
+            "句群是語法概念（語言單位），段落是文章結構概念",
+            "句群只出現在議論文中，段落出現在各類文章",
+            "句群和段落是完全相同的概念"
+          ],
+          answer: 1,
+          explanation: "句群是語法概念，比句子更高一級的語言單位，是語法中的最高級單位；段落則是文章結構，是作者表達思想內容時，由於轉折、強調或間隙等情況而造成文字上最大的停頓。"
+        },
+        {
+          id: "q3_3",
+          question: "「勞動人口收縮將對經濟產生重大影響。隨著勞動人口減少，勞動力市場將面臨供需不平衡的局面。這將導致勞動力成本上升，企業生產成本增加，最終影響企業的競爭力和經濟增長。」這個句群的中心意思是什麼？",
+          options: [
+            "勞動力市場將面臨供需不平衡",
+            "勞動力成本上升影響企業競爭力",
+            "勞動人口收縮對經濟產生重大影響",
+            "企業生產成本增加導致經濟增長放緩"
+          ],
+          answer: 2,
+          explanation: "這個句群的第一句「勞動人口收縮將對經濟產生重大影響」是中心句，後面的句子都是圍繞這個中心意思展開的具體說明。"
+        },
+        {
+          id: "q3_4",
+          question: "「市區土地供應日益短缺，政府只能在偏遠地區興建公共屋邨……公屋居民無奈地被迫跨區就業。他們雖然可以享受低廉租金，但每天付出大量時間，舟車勞頓，影響個人和家庭生活素質。」這個句群的中心意思是什麼？",
+          options: [
+            "市區土地供應日益短缺",
+            "政府在偏遠地區興建公共屋邨",
+            "公屋居民跨區就業，影響個人和家庭生活素質",
+            "公屋居民可以享受低廉租金"
+          ],
+          answer: 2,
+          explanation: "這個句群的中心意思是「公屋居民跨區就業，影響個人和家庭生活素質」。前面的句子是交代原因，後面說明影響（雖有低租金，但舟車勞頓影響生活素質）。"
+        },
+        {
+          id: "q3_5",
+          question: "關於現代化辦公室的段落，文中使用了哪些關聯詞將三個句群連接成一個段落？",
+          options: [
+            "「因此」和「所以」",
+            "「此外」和「最後」",
+            "「然而」和「但是」",
+            "「首先」和「其次」"
+          ],
+          answer: 1,
+          explanation: "文中使用了「此外」和「最後」這兩個關聯詞，將三個句群（提高工作效率、促進團隊協作、提高員工生產力）連接成一個完整的段落。"
+        },
+        {
+          id: "q3_6",
+          question: "現代化辦公室的段落共由多少個句群組成？",
+          options: [
+            "一個句群",
+            "兩個句群",
+            "三個句群",
+            "四個句群"
+          ],
+          answer: 2,
+          explanation: "這段文字由三個句群組成，分別圍繞三個中心意思：(1)現代化辦公室能提高工作效率；(2)現代化辦公室也能促進團隊協作和溝通；(3)現代化辦公室能夠提高員工的生產力和工作滿意度。"
+        },
+        {
+          id: "q3_7",
+          question: "句群在語法層級上的地位是什麼？",
+          options: [
+            "比詞語低一級的語言單位",
+            "與句子同級的語言單位",
+            "比句子高一級，是語法中的最高級單位",
+            "比篇章高一級的語言單位"
+          ],
+          answer: 2,
+          explanation: "句群比句子更高一級的語言單位，是語法中的最高級單位。其層級關係為：詞語→句子→句群（語法最高級）。"
+        },
+        {
+          id: "q3_8",
+          question: "「近年社會上經常談論對年輕僱員的管理問題……管理層若沿用舊有模式或固有思維處事，的確很難與年輕員工溝通和磨合。」這個句群的中心意思是什麼？",
+          options: [
+            "年輕員工難以管理",
+            "管理層應改變舊有模式或固有思維，才能與年輕員工溝通和磨合得更好",
+            "社會上對年輕僱員的評價都是負面的",
+            "管人理事是管理層的常規工作"
+          ],
+          answer: 1,
+          explanation: "這個句群的中心意思是「管理層應改變舊有模式或固有思維，才能與年輕員工溝通和磨合得更好」。前面的句子是鋪墊，後面點出核心：管理層需要改變思維。"
+        }
+      ]
+    },
+    {
+      id: "section4",
+      title: "第四關：尋找段落中心句",
+      icon: "🎯",
+      color: "#9B59B6",
+      description: "考核你能否準確找出段落的中心句，並理解中心句的位置規律。",
+      questions: [
+        {
+          id: "q4_1",
+          question: "中心句最主要的作用是什麼？",
+          options: [
+            "提供文章的背景資料",
+            "最能體現段落的主要信息，概括段落大意",
+            "引出文章的具體例子",
+            "連接上下兩個段落"
+          ],
+          answer: 1,
+          explanation: "中心句最能體現段落的主要信息，概括段落大意。段落中的其他句子則圍繞中心句展開。除了概括段意外，中心句也起著承上啟下、歸納總結的作用。"
+        },
+        {
+          id: "q4_2",
+          question: "「明天開完會後，還要請大家留下來整理資料。大家分工合作把調查數據歸檔、把舊有的宣傳單張清理掉、把今年客戶填寫的表格分門別類，可以嗎？」這段文字的中心句在哪裡？",
+          options: [
+            "中心句在段落中間",
+            "中心句在段落結尾",
+            "中心句在段落開頭",
+            "這段文字沒有中心句"
+          ],
+          answer: 2,
+          explanation: "中心句「明天開完會後，還要請大家留下來整理資料」在段首，後面的句子是圍繞第一句的意思展開，描述如何「整理資料」的具體安排。"
+        },
+        {
+          id: "q4_3",
+          question: "「你們剛剛的報告確實有很多值得表彰的地方……但是，報告的內容稍微離題了，重點不夠清晰，請你們再重新調整內容強調出重點。」這段文字的中心句是哪一句？",
+          options: [
+            "你們剛剛的報告確實有很多值得表彰的地方",
+            "電子簡報的製作精美，說話的語速恰當",
+            "報告的內容稍微離題了，重點不夠清晰",
+            "請你們再重新調整內容強調出重點"
+          ],
+          answer: 3,
+          explanation: "中心句是「請你們再重新調整內容強調出重點」，位於段落末尾。前面對整場報告的評語（表彰的地方），是為了帶出調整內容強調重點的要求，這是「先分後總」的結構。"
+        },
+        {
+          id: "q4_4",
+          question: "中心句位於段落中間時，其作用是什麼？",
+          options: [
+            "於文首揭示段落的中心意思，後文再作具體介紹",
+            "先表述細節，最後作概括性的結論",
+            "起承上啟下的作用，段落上半部為其作鋪墊，下半部提供例證",
+            "只起到連接上下段落的過渡作用"
+          ],
+          answer: 2,
+          explanation: "中心句在中間時，段落上半部為中心句作鋪墊，或交代細節，或提出論據；中心句起承上啟下的作用；段落下半部每每是中心內容，或陳述細節，或提供例證。"
+        },
+        {
+          id: "q4_5",
+          question: "「海底世界並不是一片寂靜的。根據海洋生物學家的研究，海底的動物常常在竊竊私語，發出各種各樣的聲音……牠們吃東西時發出一種聲音，游動時發出另一種聲音，遇到危險時還會發出警報聲。」這段文字的中心句是哪一句？",
+          options: [
+            "海底世界並不是一片寂靜的",
+            "根據海洋生物學家的研究",
+            "海底的動物常常在竊竊私語",
+            "牠們吃東西時發出一種聲音"
+          ],
+          answer: 2,
+          explanation: "中心句是「海底的動物常常在竊竊私語」，位於段落中間。第一句「海底世界並不是一片寂靜的」是引入，後面的句子具體說明動物發出的各種聲音，都是圍繞「竊竊私語」這個中心意思展開的。"
+        },
+        {
+          id: "q4_6",
+          question: "在「總分關係」的段落中，中心句通常在哪個位置？",
+          options: [
+            "在段落開頭（總結句在前）",
+            "在段落結尾（總結句在後）",
+            "在段落中間",
+            "總分關係的段落沒有中心句"
+          ],
+          answer: 0,
+          explanation: "在總分關係中，總結句便是中心句，通常在段落開頭，後面的句子是對中心句的具體分述。例如「用筷有十忌」這個中心句在段首，後面逐一列出十個忌諱。"
+        },
+        {
+          id: "q4_7",
+          question: "「讀書人除了擁有現實的世界之外，還擁有另一個更為浩瀚也更為豐富的世界……所以我常想讀書人是世間幸福人。而那些失去或不能閱讀的人是多麼的不幸……」這段文字的中心句是哪一句？",
+          options: [
+            "讀書人除了擁有現實的世界之外，還擁有另一個更為浩瀚也更為豐富的世界",
+            "所以我常想讀書人是世間幸福人",
+            "那些失去或不能閱讀的人是多麼的不幸",
+            "世間有諸多的不平等"
+          ],
+          answer: 1,
+          explanation: "中心句是「所以我常想讀書人是世間幸福人」，位於段落中間。前面的句子（讀書人擁有另一個世界）是鋪墊，後面的句子（失去閱讀能力的人不幸）是對中心句的進一步論證。"
+        },
+        {
+          id: "q4_8",
+          question: "在「因果關係」的段落中，哪類句子通常是中心句？",
+          options: [
+            "交代「因」的句子",
+            "交代「果」的句子",
+            "提出問題的句子",
+            "提供例子的句子"
+          ],
+          answer: 1,
+          explanation: "在因果關係的段落中，一般交代「果」的句子就是中心句。例如「用宣紙寫字作畫最好」是「果」，前面的句子都是解釋「為什麼」（宣紙的各種特點），這些特點是「因」。"
+        }
+      ]
+    },
+    {
+      id: "section5",
+      title: "第五關：分析篇章結構",
+      icon: "🏗️",
+      color: "#E74C3C",
+      description: "考核你對各種篇章結構形式的認識及分析能力。",
+      questions: [
+        {
+          id: "q5_1",
+          question: "「縱向式」篇章結構的主要特點是什麼？",
+          options: [
+            "圍繞同一中心思想，把材料並列呈現",
+            "按照時間的發展先後順序或事物發展的來龍去脈，從頭到尾的自然順序來結構文章",
+            "先提出問題，再分析問題，最後解決問題",
+            "先對全貌作總體敘述，然後分層予以具體敘述"
+          ],
+          answer: 1,
+          explanation: "縱向式是按照時間的發展先後順序或事物發展的來龍去脈，從頭到尾的自然順序來結構文章的方式。"
+        },
+        {
+          id: "q5_2",
+          question: "「橫向式」篇章結構常見於哪類文章？",
+          options: [
+            "小說和散文",
+            "遊記（按空間轉移）、議論文和說明文（按邏輯順序）",
+            "詩歌和戲劇",
+            "日記和書信"
+          ],
+          answer: 1,
+          explanation: "橫向式圍繞同一個中心思想，把選取的材料並列呈現；或按空間的轉移編排（常見於遊記）；或按邏輯順序編排（常見於議論文和說明文）。"
+        },
+        {
+          id: "q5_3",
+          question: "「三段式」篇章結構的三個部分依次是什麼？",
+          options: [
+            "開頭、中間、結尾",
+            "提出問題、分析問題、解決問題",
+            "總述、分述、總結",
+            "引言、論證、結論"
+          ],
+          answer: 1,
+          explanation: "三段式按提出問題、分析問題、解決問題來結構文章，常見於議論文。"
+        },
+        {
+          id: "q5_4",
+          question: "「先總後分，又總式」的篇章結構，又稱為什麼？",
+          options: [
+            "首括式",
+            "尾括式",
+            "雙括式",
+            "並列式"
+          ],
+          answer: 2,
+          explanation: "先總後分，又總式在文章中呈現「總──分──總」的格式，又叫雙括式。首括式是「總──分」，尾括式是「分──總」。"
+        },
+        {
+          id: "q5_5",
+          question: "《保護牙齒 中醫西醫各顯神通》一文，按內容結構可分為四個結構段，其結構形式屬於哪一種？",
+          options: [
+            "縱向式",
+            "橫向式",
+            "三段式",
+            "總分式（先總後分，又總式）"
+          ],
+          answer: 3,
+          explanation: "這篇文章的結構是：第1段（總）→第2-6段（分：中醫角度）→第7-11段（分：西醫角度）→第12段（總），呈現「總──分──總」的格式，屬於總分式中的「先總後分，又總式」（雙括式）。"
+        },
+        {
+          id: "q5_6",
+          question: "關於「過渡段」的處理，以下哪個說法正確？",
+          options: [
+            "過渡段可以獨立劃成一個結構段",
+            "過渡段應從其功用考慮劃入哪一段：承上為主劃入上一段，啟下為主劃入下一段",
+            "過渡段只出現在文章的開頭",
+            "過渡段不含有任何實質內容"
+          ],
+          answer: 1,
+          explanation: "過渡段起連接上下文的作用，不能獨立劃成一個結構段，應從其功用考慮劃入哪一段。承上為主，應劃入上一段；啟下為主的，應劃入下一段。"
+        },
+        {
+          id: "q5_7",
+          question: "《保護牙齒》一文第二結構段（第2-6段）的大意是什麼？",
+          options: [
+            "通過提問的方式點出文章主題",
+            "從中醫的角度看牙痛的成因和提出應對的方法",
+            "從西醫的角度看牙痛的成因和提出應對的方法",
+            "總結全文重點，並倡導讀者應結合中西醫的長處保護牙齒"
+          ],
+          answer: 1,
+          explanation: "第二結構段（第2-6段）從中醫的角度看牙痛的成因（經絡臟腑失衡）和提出應對的方法（辨證施治、食療等）。"
+        },
+        {
+          id: "q5_8",
+          question: "「結構段」的定義是什麼？",
+          options: [
+            "文章中每一個自然段都是一個結構段",
+            "由一個或多個內容和主題相近的自然段合起來，表達一個完整而又與全文有聯繫的意思",
+            "結構段必須包含至少三個自然段",
+            "結構段只出現在議論文和說明文中"
+          ],
+          answer: 1,
+          explanation: "結構段由一個或多個內容和主題相近的自然段合起來，表達一個完整而又與全文有聯繫的意思。結構段又叫意義段。"
+        },
+        {
+          id: "q5_9",
+          question: "「對比式」篇章結構中，「縱比」是指什麼？",
+          options: [
+            "比較兩種或以上的不同事物",
+            "把不同人物對同一事物的不同態度加以對比",
+            "同一事物在不同的時間、地點的不同情況",
+            "通過事物之間的比較表明作者的思想"
+          ],
+          answer: 2,
+          explanation: "縱比是指同一事物在不同的時間、地點的不同情況，即縱向（時間軸）的比較。橫比則是比較兩種或以上的不同事物。"
+        },
+        {
+          id: "q5_10",
+          question: "如果一篇文章先介紹某城市的歷史發展，再描述現在的面貌，最後展望未來，這屬於哪種篇章結構？",
+          options: [
+            "橫向式",
+            "縱向式",
+            "總分式",
+            "對比式"
+          ],
+          answer: 1,
+          explanation: "這篇文章按照時間的發展先後順序（歷史→現在→未來），從頭到尾的自然順序來結構文章，屬於縱向式篇章結構。"
+        }
+      ]
+    }
+  ]
+};
+
+// ===== GAME STATE =====
+let state = {
+  mode: 'practice',
+  currentSection: null,
+  currentQuestionIndex: 0,
+  score: 0,
+  correctCount: 0,
+  wrongCount: 0,
+  selectedAnswer: null,
+  answered: false,
+  timerInterval: null,
+  timeLeft: 20,
+  timePerQuestion: 20,
+  startTime: null,
+  totalTime: 0,
+  selectedSections: new Set()
+};
+
+// ===== INIT =====
+function init() {
+  renderSectionCards();
+  checkURLParams();
+}
+
+function checkURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const sectionId = params.get('section');
+  const mode = params.get('mode');
+  if (sectionId && mode) {
+    const section = GAME_DATA.sections.find(s => s.id === sectionId);
+    if (section) {
+      state.mode = mode;
+      state.timePerQuestion = parseInt(params.get('time') || '20');
+      document.getElementById('time-per-question').value = state.timePerQuestion;
+      setMode(mode);
+      startSection(section);
+    }
+  }
+}
+
+function renderSectionCards() {
+  const grid = document.getElementById('sections-grid');
+  grid.innerHTML = '';
+  GAME_DATA.sections.forEach(section => {
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    card.style.setProperty('--card-color', section.color);
+    card.dataset.id = section.id;
+    card.innerHTML = `
+      <div class="card-icon">${section.icon}</div>
+      <div class="card-title">${section.title}</div>
+      <div class="card-count">${section.questions.length} 題</div>
+    `;
+    card.onclick = () => toggleSectionCard(card, section.id);
+    grid.appendChild(card);
+  });
+  // Select all by default
+  document.querySelectorAll('.section-card').forEach(c => {
+    c.classList.add('selected');
+    state.selectedSections.add(c.dataset.id);
+  });
+}
+
+function toggleSectionCard(card, id) {
+  if (card.classList.contains('selected')) {
+    if (state.selectedSections.size > 1) {
+      card.classList.remove('selected');
+      state.selectedSections.delete(id);
+    }
+  } else {
+    card.classList.add('selected');
+    state.selectedSections.add(id);
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.getElementById('mode-practice').classList.toggle('active', mode === 'practice');
+  document.getElementById('mode-timed').classList.toggle('active', mode === 'timed');
+  document.getElementById('timer-settings').classList.toggle('show', mode === 'timed');
+}
+
+function startGame() {
+  if (state.selectedSections.size === 1) {
+    const sectionId = [...state.selectedSections][0];
+    const section = GAME_DATA.sections.find(s => s.id === sectionId);
+    startSection(section);
+  } else {
+    showSectionSelect();
+  }
+}
+
+function showSectionSelect() {
+  const list = document.getElementById('section-list');
+  list.innerHTML = '';
+  GAME_DATA.sections.filter(s => state.selectedSections.has(s.id)).forEach(section => {
+    const item = document.createElement('div');
+    item.className = 'section-item';
+    item.style.setProperty('--item-color', section.color);
+    item.innerHTML = `
+      <div class="section-item-icon">${section.icon}</div>
+      <div class="section-item-info">
+        <div class="section-item-title">${section.title}</div>
+        <div class="section-item-desc">${section.description}</div>
+      </div>
+      <div class="section-item-count">${section.questions.length} 題</div>
+    `;
+    item.onclick = () => startSection(section);
+    list.appendChild(item);
+  });
+  showScreen('section-select-screen');
+}
+
+function startSection(section) {
+  state.currentSection = section;
+  state.currentQuestionIndex = 0;
+  state.score = 0;
+  state.correctCount = 0;
+  state.wrongCount = 0;
+  state.startTime = Date.now();
+  state.timePerQuestion = parseInt(document.getElementById('time-per-question').value);
+
+  // Apply section color
+  document.documentElement.style.setProperty('--section-color', section.color);
+  document.getElementById('header-section-badge').textContent = section.title.split('：')[0];
+  document.getElementById('header-section-badge').style.background = section.color;
+  document.getElementById('progress-bar').style.setProperty('--section-color', section.color);
+
+  // Timer display
+  const timerEl = document.getElementById('timer-display');
+  timerEl.style.display = state.mode === 'timed' ? 'block' : 'none';
+
+  showScreen('game-screen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const section = state.currentSection;
+  const q = section.questions[state.currentQuestionIndex];
+  const total = section.questions.length;
+
+  // Update header
+  document.getElementById('progress-text').textContent = `第 ${state.currentQuestionIndex + 1} 題，共 ${total} 題`;
+  document.getElementById('progress-bar').style.width = `${(state.currentQuestionIndex / total) * 100}%`;
+  document.getElementById('score-display').textContent = state.score;
+  document.getElementById('question-num').textContent = `第 ${state.currentQuestionIndex + 1} 題 / ${total}`;
+  document.getElementById('question-text').textContent = q.question;
+
+  // Reset state
+  state.selectedAnswer = null;
+  state.answered = false;
+
+  // Render options
+  const optionsList = document.getElementById('options-list');
+  optionsList.innerHTML = '';
+  const labels = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const item = document.createElement('div');
+    item.className = 'option-item';
+    item.dataset.index = i;
+    item.innerHTML = `
+      <div class="option-label">${labels[i]}</div>
+      <div class="option-text">${opt}</div>
+      <div class="option-icon"></div>
+    `;
+    item.onclick = () => selectOption(i);
+    optionsList.appendChild(item);
+  });
+
+  // Reset UI
+  document.getElementById('confirm-btn').disabled = true;
+  document.getElementById('confirm-btn').style.display = 'block';
+  const fb = document.getElementById('feedback-box');
+  fb.className = 'feedback-box';
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = state.currentQuestionIndex < total - 1 ? '下一題 →' : '查看結果 🏆';
+
+  // Animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'slideIn 0.3s ease';
+
+  // Start timer
+  if (state.mode === 'timed') {
+    startTimer();
+  }
+}
+
+function selectOption(index) {
+  if (state.answered) return;
+  state.selectedAnswer = index;
+  document.querySelectorAll('.option-item').forEach((item, i) => {
+    item.classList.toggle('selected', i === index);
+  });
+  document.getElementById('confirm-btn').disabled = false;
+}
+
+function confirmAnswer() {
+  if (state.answered || state.selectedAnswer === null) return;
+  state.answered = true;
+
+  if (state.mode === 'timed') {
+    clearInterval(state.timerInterval);
+  }
+
+  const q = state.currentSection.questions[state.currentQuestionIndex];
+  const correct = state.selectedAnswer === q.answer;
+
+  // Update score
+  if (correct) {
+    state.score += 10;
+    state.correctCount++;
+  } else {
+    state.wrongCount++;
+  }
+  document.getElementById('score-display').textContent = state.score;
+
+  // Show answer feedback on options
+  document.querySelectorAll('.option-item').forEach((item, i) => {
+    item.classList.add('disabled');
+    if (i === q.answer) {
+      item.classList.add('correct');
+      item.querySelector('.option-icon').textContent = '✅';
+    } else if (i === state.selectedAnswer && !correct) {
+      item.classList.add('wrong');
+      item.querySelector('.option-icon').textContent = '❌';
+    }
+  });
+
+  // Show feedback box
+  const fb = document.getElementById('feedback-box');
+  const fbTitle = document.getElementById('feedback-title');
+  const fbText = document.getElementById('feedback-text');
+
+  if (correct) {
+    fb.className = 'feedback-box correct-fb show';
+    fbTitle.textContent = '✅ 答對了！';
+  } else {
+    fb.className = 'feedback-box wrong-fb show';
+    fbTitle.textContent = '❌ 答錯了';
+  }
+  fbText.textContent = q.explanation;
+
+  // Hide confirm, show next
+  document.getElementById('confirm-btn').style.display = 'none';
+  document.getElementById('next-btn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+  state.currentQuestionIndex++;
+  if (state.currentQuestionIndex >= state.currentSection.questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function startTimer() {
+  state.timeLeft = state.timePerQuestion;
+  const timerNum = document.getElementById('timer-num');
+  timerNum.textContent = state.timeLeft;
+  timerNum.className = 'timer-num';
+
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    timerNum.textContent = state.timeLeft;
+    if (state.timeLeft <= 5) {
+      timerNum.className = 'timer-num warning';
+    }
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      // Auto-submit with no answer
+      if (!state.answered) {
+        state.answered = true;
+        state.wrongCount++;
+        const q = state.currentSection.questions[state.currentQuestionIndex];
+        document.querySelectorAll('.option-item').forEach((item, i) => {
+          item.classList.add('disabled');
+          if (i === q.answer) {
+            item.classList.add('correct');
+            item.querySelector('.option-icon').textContent = '✅';
+          }
+        });
+        const fb = document.getElementById('feedback-box');
+        document.getElementById('feedback-title').textContent = '⏰ 時間到！';
+        document.getElementById('feedback-text').textContent = q.explanation;
+        fb.className = 'feedback-box wrong-fb show';
+        document.getElementById('confirm-btn').style.display = 'none';
+        document.getElementById('next-btn').className = 'next-btn show';
+      }
+    }
+  }, 1000);
+}
+
+function showResult() {
+  clearInterval(state.timerInterval);
+  state.totalTime = Math.round((Date.now() - state.startTime) / 1000);
+  const total = state.currentSection.questions.length;
+  const maxScore = total * 10;
+  const pct = Math.round((state.score / maxScore) * 100);
+
+  // Grade
+  let grade, emoji, gradeBg;
+  if (pct >= 90) { grade = '優秀 🏆'; emoji = '🎉'; gradeBg = '#27AE60'; }
+  else if (pct >= 70) { grade = '良好 👍'; emoji = '😊'; gradeBg = '#2980B9'; }
+  else if (pct >= 50) { grade = '合格 📚'; emoji = '😐'; gradeBg = '#E8A838'; }
+  else { grade = '需要加油 💪'; emoji = '😅'; gradeBg = '#E74C3C'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = pct >= 70 ? '闖關成功！' : '繼續努力！';
+  document.getElementById('result-section-name').textContent = state.currentSection.title;
+  document.getElementById('result-score-big').textContent = state.score;
+  document.getElementById('result-score-total').textContent = `/ ${maxScore} 分`;
+  document.getElementById('stat-correct').textContent = state.correctCount;
+  document.getElementById('stat-wrong').textContent = state.wrongCount;
+  document.getElementById('stat-time').textContent = state.mode === 'timed' ? state.totalTime : '--';
+
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = grade;
+  badge.style.background = gradeBg;
+  badge.style.color = 'white';
+
+  // Score circle
+  const circle = document.getElementById('score-circle');
+  circle.style.setProperty('--pct', `${pct}%`);
+  circle.style.background = `conic-gradient(${state.currentSection.color} ${pct}%, #eee ${pct}%)`;
+
+  document.getElementById('btn-retry').style.background = `linear-gradient(135deg, ${state.currentSection.color}, ${state.currentSection.color}cc)`;
+
+  if (pct >= 90) spawnConfetti();
+
+  showScreen('result-screen');
+}
+
+function retrySection() {
+  startSection(state.currentSection);
+}
+
+function showHome() {
+  clearInterval(state.timerInterval);
+  showScreen('home-screen');
+}
+
+function confirmBack() {
+  if (confirm('確定要退出本關嗎？進度將不會保存。')) {
+    clearInterval(state.timerInterval);
+    showHome();
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== SHARE =====
+function copyGameLink() {
+  const section = state.currentSection;
+  const baseUrl = window.location.href.split('?')[0];
+  const url = `${baseUrl}?section=${section.id}&mode=${state.mode}&time=${state.timePerQuestion}`;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('✅ 遊戲連結已複製！分享給朋友一起挑戰吧！');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ 遊戲連結已複製！分享給朋友一起挑戰吧！');
+  });
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('share-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== CONFETTI =====
+function spawnConfetti() {
+  const colors = ['#E74C3C','#F39C12','#27AE60','#2980B9','#9B59B6','#1ABC9C'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+      piece.style.animationDelay = Math.random() * 0.5 + 's';
+      piece.style.width = piece.style.height = (Math.random() * 8 + 6) + 'px';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 3500);
+    }, i * 20);
+  }
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
